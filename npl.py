@@ -192,8 +192,12 @@ class Map:
         # now that we found the node with shortest path, follow it
         return self.find_node(identifier, next_node, path + [next_link])
 
-    def map_node(self, node: Node, source=None):
+    def map_node(self, node: Node, source=None, ):
         new_map = {}
+
+        if source is None:
+            source = node
+
         # the map should point to every single other node in the entire busy
         # it should hold the length to each successive node from that node
         for links in node.get_links():
@@ -210,7 +214,8 @@ class Map:
                 new_map[lookat] = links.length
 
             # for all subsequent nodes on that node, check length
-            new_map = sum_dict(new_map, self.map_node(lookat, node), links.length)
+
+            new_map = sum_dict(new_map, self.map_node(lookat, source), links.length)
 
         return new_map
 
