@@ -12,7 +12,7 @@ my_map.add(750, 751, 1)
 my_map.add(750, 752, 1)
 
 # you can also use add to link two existing nodes
-my_map.add(751, 752, 3)
+# my_map.add(751, 752, 3)
 
 # you can also manually add a link using two Node objects
 my_map.link(my_map.quick_find(750), Node(753), 1)
