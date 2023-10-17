@@ -30,12 +30,15 @@ class Node:
 class Inventory:
     def __init__(self):
         self.inventory = {}
+        self.descriptions = {}
 
-    def store(self, item, qty):
+    def store(self, item, qty, description=None):
         if self.check(item) is not None:
             self.inventory[item] += qty
         else:
             self.inventory[item] = qty
+        if description is not None:
+            self.descriptions[item] = description
 
     def check(self, item):
         if item in self.inventory:
@@ -46,6 +49,9 @@ class Inventory:
         return None
 
     def remove(self, item, qty):
+        if item in self.descriptions:
+            # remove description
+            self.descriptions.pop(item)
         if self.check(item) is not None:
             if self.inventory[item] >= qty:
                 self.inventory[item] -= qty
@@ -55,6 +61,12 @@ class Inventory:
                 raise ValueError("Insufficient items error")
         else:
             raise IndexError("Item not found in inventory")
+
+    def get_description(self, item):
+        if item in self.descriptions:
+            return self.descriptions[item]
+        else:
+            return "{} (no description found)".format(item)
 
 
 class Link:

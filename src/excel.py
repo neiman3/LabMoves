@@ -1,5 +1,6 @@
 import logging
 import os.path
+import pandas as pd
 
 from openpyxl import Workbook, load_workbook
 from openpyxl.worksheet.table import Table, TableStyleInfo
@@ -50,22 +51,12 @@ def dataframe(form_fields, form_type):
     return form_fields[form_type]["dataframe"]
 
 
-def append_table(wb, data, form_fields, form_kind, worksheet=None):
-    if worksheet.lower()[-9:] == ' (legacy)':
-        worksheet = worksheet[:-9]
-    if worksheet is None:
-        ws = wb.active
-    else:
-        if worksheet in wb:
-            ws = wb[worksheet]
-        else:
-            logging.error("Could not find a worksheet named \"{}\" in the workbook. Please try to create it.")
-            raise IndexError("Worksheet not found in workbook.")
-    result = []
-    for i in dataframe(form_fields, form_kind).keys():
-        result.append(data[i])
-    ws.append(result)
-    return wb
+def write_row(ws_tab_name, data, filename):
+    # save the workbook
+    wb = load_wb(filename)
+    ws = wb[ws_tab_name]
+    ws.append(data)
+    save_wb(filename, wb)
 
 
 def new_wb():
@@ -77,3 +68,16 @@ def filename_generate(dataframe):
     name = "".join(dataframe["Name"].split(" "))
     date = "-".join(dataframe["Checkout End"].split("/"))
     return "EquipmentChk_{}_{}.pdf".format(name, date)
+
+
+def read_default_equipment(filename):
+    # reads the Equipment tab to get default equipments for each lab week
+    return None
+
+def list_classes(sections_list):
+    result = []
+    for section in sections_list.keys():
+        value = section.split("-")[0]
+        if value not in result:
+            result.append(value)
+    return result
