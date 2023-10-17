@@ -14,9 +14,6 @@ class Node:
         # returns true if it's at the end of a lien ie no tail
         return len(self.links) == 1
 
-    def link(self):
-        # dictionary with a link and a precomputed map
-        raise NotImplementedError
 
     def get_links(self):
         return [link for link in self.links.keys()]
