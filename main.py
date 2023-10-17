@@ -2,7 +2,7 @@ from npl import *
 
 
 # initialize a new map with your "anchor" node
-my_map = Map(Node(5562))
+my_map = Graph(Node(5562))
 
 # you can add new nodes with the add method- it links them
 # this takes an identifier. You can find identifier of the anchor using map.home()

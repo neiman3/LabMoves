@@ -75,7 +75,7 @@ class Link:
         return "<npl Link object \"{}\" <-{}-> \"{}\">".format(self.head, self.length, self.tail)
 
 
-class Map:
+class Graph:
     def __init__(self, anchor: Node):
         if type(anchor) is not Node:
             raise TypeError
@@ -108,9 +108,19 @@ class Map:
         self.floating.append(Node(identifier))
         return
 
-    def update(self, pointer=None, edit_list=None):
+    def update(self, pointer=None, edit_list=None, history=None):
+
         if pointer is None:
             pointer = self.anchor
+
+        if history is None:
+            history = []
+
+        if pointer.name in history:
+            return
+        else:
+            history.append(pointer.name)
+
         pointer: Node
         # update map for all nodes.
         if edit_list is None:
@@ -118,14 +128,15 @@ class Map:
             edit_list = self.list_nodes()
 
         # re-map the current node
-        pointer.map = self.map_node(pointer)
-        edit_list.remove(pointer.name)
+        if pointer.name in edit_list:
+            pointer.map = self.map_node(pointer)
+            edit_list.remove(pointer.name)
 
         # re-map all child node
         for link in pointer.get_links():
             destination = link.traverse_node(pointer)
             if destination.name in edit_list:
-                self.update(link.traverse_node(pointer), edit_list)
+                self.update(link.traverse_node(pointer), edit_list, history)
 
         return
 
@@ -195,9 +206,6 @@ class Map:
     def map_node(self, node: Node, source=None, ):
         new_map = {}
 
-        if source is None:
-            source = node
-
         # the map should point to every single other node in the entire busy
         # it should hold the length to each successive node from that node
         for links in node.get_links():
@@ -215,7 +223,7 @@ class Map:
 
             # for all subsequent nodes on that node, check length
 
-            new_map = sum_dict(new_map, self.map_node(lookat, source), links.length)
+            new_map = sum_dict(new_map, self.map_node(lookat, node), links.length)
 
         return new_map
 
@@ -262,3 +270,22 @@ def sum_dict(map_1, map_2, link_length):
         else:
             map_1[item] = map_2[item] + link_length
     return map_1
+
+
+def locate(map_obj, asset_id):
+    map_obj: Graph
+    result = {}
+    # return a list of all location id's that have a certain asset
+    for node_name in map_obj.list_nodes():
+        pointer = map_obj.quick_find(node_name)
+        if pointer.inventory.check(asset_id) is not None:
+            result[node_name] = pointer.inventory.check(asset_id)
+    return result
+
+
+def move(map_obj, asset_id, from_id, to_id, qty):
+    from_node = map_obj.quick_find(from_id)
+    to_node = map_obj.quick_find(to_id)
+    from_node.inventory.remove(asset_id, qty)
+    to_node.inventory.store(asset_id, qty)
+
