@@ -1,7 +1,6 @@
-from src.excel import *
 from src.npl import *
+from src.file_tools import *
 import logging
-import datetime
 
 
 # The excel sheet should read some stuff
@@ -75,28 +74,31 @@ def read_sections(filename):
     ws = wb[TAB_NAME]
 
     # Read quarter start and end time
-    start_date = ws['H4'].value
-    end_date = ws['I4'].value
+    start_date = ws['I4'].value
+    end_date = ws['J4'].value
 
     # values
     # starting from row 4
     result = {}
     courses = [[i.value for i in r] for r in ws.iter_rows(min_row=4)]
     for course in courses:
-        if None in course[0:6]:
+        if None in course[0:7]:
             # ignore
-            logging.warning("Malformed or missing data for course {}".format(course))
+            if course[0] is not None:
+                logging.warning("Malformed or missing data for course {}{}".format(course[0], ((" ({})".format(course[2])) if course[2] is not None else "")))
             continue
         course_shortcode = "{}-{:02d}".format(course[0], course[1])  # ex: 342-01 course and section
         instructor = course[2]
         room = ((course[3]) if type(course[3]) is int else (int(course[3])))
         day_of_week = resolve_day_of_week(course[4])
         time = course[5]
+        groups = course[6]
         result[course_shortcode] = {
             "instructor": instructor,
             "room": room,
             "day": day_of_week,
-            "time": time
+            "time": time,
+            "groups": groups
         }
 
     return start_date, end_date, result
@@ -120,7 +122,7 @@ def read_holidays(filename):
 
     wb = load_wb(filename)
     ws = wb[TAB_NAME]
-    holidays = [r[0].value for r in ws.iter_rows(min_row=4, min_col=11)]
+    holidays = [r[0].value for r in ws.iter_rows(min_row=4, min_col=12)]
     return holidays
 
 
@@ -152,53 +154,25 @@ def resolve_day_of_week(text):
         raise ValueError("Unable to resolve {} to a weekday. Please do not edit the template sheet.".format(text))
 
 
-def enumerate_day_of_week(text):
-    text: str
-    text2 = text.lower()
-    lut = {
-        "monday": 0,
-        "mon": 0,
-        "m": 0,
-        "tuesday": 1,
-        "tues": 1,
-        "tue": 1,
-        "t": 1,
-        "wednesday": 2,
-        "wed": 2,
-        "w": 2,
-        "thursday": 3,
-        "thurs": 3,
-        "thu": 3,
-        "r": 3,
-        "friday": 4,
-        "fri": 4,
-        "f": 4
-    }
-    if text2 in lut:
-        return lut[text2]
-    else:
-        raise ValueError("Unable to resolve {} to a weekday. Please do not edit the template sheet.".format(text))
+def read_default_equipment_schedule(filename):
+    # Open the Equipment tab
+    # returns a LUT that can be used to enumerate default equipments
+    # For example, the 295WK4 shortcode would return a dictionary of
+    # requirements and quantity
+    # {"RB2" : 3, "LCR", 1}
 
+    TAB_NAME = "Equipment"
 
-def generate_lab_times(day_of_week, start_time, quarter_start_date, quarter_end_date, holidays):
-    # returns a list of tuples  [(datetime, week no, is_holiday)]
-    pointer = quarter_start_date
-    lab_day_of_week = enumerate_day_of_week(day_of_week)
-    result = []
-    week = 0
-    while True:
-        if pointer.weekday() == lab_day_of_week:
-            # correct day
-            is_holiday = False
-            if pointer in holidays:
-                is_holiday = True
-                # it's not a holiday- continue
-            result.append(((datetime.datetime.combine(pointer.date(), start_time)), week, is_holiday))
-            pointer += datetime.timedelta(days=7)
-            week += 1
-        else:
-            pointer += datetime.timedelta(days=1)
-        if pointer > quarter_end_date:
-            break
-
+    wb = load_wb(filename)
+    ws = wb[TAB_NAME]
+    rows = [[i.value for i in r] for r in ws.iter_rows(min_row=4, min_col=4)]
+    result = {}
+    for row in rows:
+        shortcode = row[0]
+        if shortcode is None:
+            continue
+        result [shortcode] = {}
+        for i in range(0,8):
+            if row[2*i + 1] is not None:
+                result[shortcode][row[2*i+1]] = row[2*i + 2]
     return result

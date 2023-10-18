@@ -123,3 +123,13 @@ def split_up(text: str, delimiters):
         text = text.replace(c, '\r')
     text = [i for i in text.split('\r') if i != '']
     return text
+
+
+def user_edit(filename, message=None):
+    # Prompt user to edit
+    if message is None:
+        print("Please fill out the excel template.")
+    else:
+        print(message)
+    open_file_in_windows(filename)
+    input("Press enter when you have saved and closed. [enter] ")

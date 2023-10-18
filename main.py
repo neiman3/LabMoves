@@ -1,13 +1,17 @@
 # Copyright 2023 Alex Neiman all rights reserved
 # Equipment move software tool
+from src.helpers import generate_lab_times
+from src.splmove import *
+from src.file_tools import *
+import shutil
+import os
 
 DEBUG_MODE = True
 
-from src.splmove import *
-from src.file_tools import *
-from src.npl import *
-import shutil
-import os
+
+def default_shortcode(week, course):
+    return "{}WK{}".format(course, week)
+
 
 if __name__ == "__main__":
     # main flow
@@ -26,7 +30,6 @@ if __name__ == "__main__":
     else:
         if not os.path.isdir(filename):
             raise FileExistsError("{} is not a directory. Please delete".format(filename))
-
 
     # duplicate the excel template
     # ask for project name
@@ -55,12 +58,7 @@ if __name__ == "__main__":
         break
 
     if not DEBUG_MODE:
-        print("Please fill out the excel template.")
-        open_file_in_windows(filename)
-        input("Press enter when you have saved and closed. [enter] ")
-
-
-
+        user_edit(filename)
 
     # Read lab teech employee schedule
     lab_tech_schedule = read_labtech_schedule(filename)
@@ -74,16 +72,6 @@ if __name__ == "__main__":
     # Get SPL inventory
     base_inventory = read_inventory(filename)
 
-    # We now have a list of the following structure
-    # [ datetime of lab time,
-    #   week no.,
-    #   is a holiday[t/f],
-    #   lab section info,
-    #   {info dictionary}   ]
-    # sort by datetime first, then alphabetically by section
-    # full_schedule.sort(key=lambda x: x[0])
-    # full_schedule.sort(key=lambda x: x[3])
-
     # now let's fill the default schedule in the Equipment tab
     # We want to see each class and its week
     NO_WEEKS_DEFAULT = 11
@@ -95,24 +83,66 @@ if __name__ == "__main__":
                 course,
                 week,
                 "",
-                "{}WK{}".format(course, week)
+                default_shortcode(week, course)
             ]
             write_row("Equipment", data, filename)
 
+    # Holiday
 
-    # for labs in full_schedule:
-    #     # full datetime schedule gets written to Equipment tab
-    #     data = [
-    #         labs[3], # lab and section
-    #         labs[1], # Week
-    #         ("" if not labs[2] else "Holiday (no lab)"),
-    #         "DE{}".format(labs[3]), #Short code (DE342-01)
-    #         ]
-    #     write_row("Equipment", data, filename)
+    full_schedule = []
+    for section in sections_list.keys():
+        day = sections_list[section]['day']
+        start_time = sections_list[section]['time']
+        full_schedule += ([[i for i in j] + [section, sections_list[section]] for j in
+                           generate_lab_times(day, start_time, quarter_start, quarter_end, holidays)])
+    # We now have a list of the following structure
+    # [ datetime of lab time,
+    #   week no.,
+    #   is a holiday[t/f],
+    #   lab section info,
+    #   {info dictionary}   ]
+    # sort by datetime first, then alphabetically by section
+    full_schedule.sort(key=lambda x: x[0])
+    full_schedule.sort(key=lambda x: x[3])
+
+    user_edit(filename, "Please fill out the default equipment schedule.")
+
+    # Before we fill the default schedule we need to find the shortcodes associated with the
+    # default schedules
+    default_equipment_LUT = read_default_equipment_schedule(filename)
+    # Now we can iterate through the full list of labs and check their equipment schedule
+    for i in range(len(full_schedule)):
+        event = full_schedule[i]
+        # write to Modifications tab
+        course = event[3].split('-')[0]
+        shortcode = default_shortcode(event[1], course)
+        inventory = Inventory()
+
+        # Look up the full shortcode evalutaion
+        if shortcode in default_equipment_LUT:
+            equipments = default_equipment_LUT[shortcode]
+        inventory
+        for equipment in equipments.keys():
+            required_qty = equipments[equipment]
+            # If it's negative, its a class
+            if required_qty is None:
+                continue
+            if required_qty < 0:
+                required_qty = -1 * required_qty
+            else:
+                required_qty = required_qty * event[4]['groups']
+            inventory.store(equipment, required_qty, base_inventory.get_description(equipment))
+        # don't set that schedule to the events yet- user should modify it fist
+        # full_schedule[i][4]['requirements'] = inventory
+
+        data = [
+            event[3],  # section and class no
+            event[4]['instructor'],  # instructor
+            event[1],  # week
+            event[0],  # date and time
+            # shortcode for default equipment
+
+        ]
+        # write_row(ws_tab_name="Modifications", data=data, filename=filename)
 
     open_file_in_windows(filename)
-
-
-
-
-
