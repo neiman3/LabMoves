@@ -41,6 +41,7 @@ class Inventory:
             self.descriptions[item] = description
 
     def check(self, item):
+        # returns quantity of item in inventory
         if item in self.inventory:
             if self.inventory[item] > 0:
                 return self.inventory[item]

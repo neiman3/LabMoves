@@ -85,7 +85,8 @@ def read_sections(filename):
         if None in course[0:7]:
             # ignore
             if course[0] is not None:
-                logging.warning("Malformed or missing data for course {}{}".format(course[0], ((" ({})".format(course[2])) if course[2] is not None else "")))
+                logging.warning("Malformed or missing data for course {}{}".format(course[0], (
+                    (" ({})".format(course[2])) if course[2] is not None else "")))
             continue
         course_shortcode = "{}-{:02d}".format(course[0], course[1])  # ex: 342-01 course and section
         instructor = course[2]
@@ -171,8 +172,39 @@ def read_default_equipment_schedule(filename):
         shortcode = row[0]
         if shortcode is None:
             continue
-        result [shortcode] = {}
-        for i in range(0,8):
-            if row[2*i + 1] is not None:
-                result[shortcode][row[2*i+1]] = row[2*i + 2]
+        result[shortcode] = {}
+        for i in range(0, 8):
+            if row[2 * i + 1] is not None:
+                result[shortcode][row[2 * i + 1]] = row[2 * i + 2]
     return result
+
+
+def encode_inventory(inventory):
+    # Takes an inventory object and encodes it into a string
+    # 2 x RB2, 1 x LCR [format]
+    inventory: Inventory
+    return ", ".join(["{} x {}".format(inventory.check(item), item) for item in inventory.inventory.keys()])
+
+
+def decode_inventory(encoded_string, main_inventory: Inventory):
+    # Takes a string  object and decodes it into an Inventory
+    # 2 x RB2, 1 x LCR [format]
+    base = [i.split("x") for i in ("2 x RB2, 1 x LCR".replace(" ", "").split(","))]
+    result = Inventory()
+    for equipment in base:
+        try:
+            result.store(equipment[1], int([equipment[0]]), main_inventory.get_description(equipment[1]))
+        except ValueError:
+            logging.warning("Unable to parse equipment requirement {} on line {}".format(equipment, encoded_string))
+    return result
+
+
+def read_master_inventory_requirements(filename, master_inventory, full_schedule):
+    # return a full_schedule updated with current inventory from Master Schedule sheet
+    TAB_NAME = "Master Schedule"
+
+    wb = load_wb(filename)
+    ws = wb[TAB_NAME]
+    rows = [[i.value for i in r] for r in ws.iter_rows(min_row=4)]
+    for row in rows:
+        continue

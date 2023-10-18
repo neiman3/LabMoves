@@ -121,17 +121,17 @@ if __name__ == "__main__":
         # Look up the full shortcode evalutaion
         if shortcode in default_equipment_LUT:
             equipments = default_equipment_LUT[shortcode]
-        inventory
-        for equipment in equipments.keys():
-            required_qty = equipments[equipment]
-            # If it's negative, its a class
-            if required_qty is None:
-                continue
-            if required_qty < 0:
-                required_qty = -1 * required_qty
-            else:
-                required_qty = required_qty * event[4]['groups']
-            inventory.store(equipment, required_qty, base_inventory.get_description(equipment))
+
+            for equipment in equipments.keys():
+                required_qty = equipments[equipment]
+                # If it's negative, its a class
+                if required_qty is None:
+                    continue
+                if required_qty < 0:
+                    required_qty = -1 * required_qty
+                else:
+                    required_qty = required_qty * event[4]['groups']
+                inventory.store(equipment, required_qty, base_inventory.get_description(equipment))
         # don't set that schedule to the events yet- user should modify it fist
         # full_schedule[i][4]['requirements'] = inventory
 
@@ -141,8 +141,11 @@ if __name__ == "__main__":
             event[1],  # week
             event[0],  # date and time
             # shortcode for default equipment
-
+            encode_inventory(inventory)
         ]
-        # write_row(ws_tab_name="Modifications", data=data, filename=filename)
+
+        write_row(ws_tab_name="Master Schedule", data=data, filename=filename)
+
+    # Now that the user has written out the full equipment list, try to load it again
 
     open_file_in_windows(filename)
