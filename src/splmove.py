@@ -184,11 +184,14 @@ def read_default_equipment_schedule(filename):
     return result
 
 
-def encode_inventory(inventory):
+def encode_inventory(inventory, full_description=None, master_inventory=None, sep=', '):
     # Takes an inventory object and encodes it into a string
     # 2 x RB2, 1 x LCR [format]
     inventory: Inventory
-    return ", ".join(["{} x {}".format(inventory.check(item), item) for item in inventory.inventory.keys()])
+    if full_description is None or master_inventory is None:
+        return sep.join(["{} x {}".format(inventory.check(item), item) for item in inventory.inventory.keys()])
+    else:
+        return sep.join(["{} x {}".format(inventory.check(item), master_inventory.get_description(item)) for item in inventory.inventory.keys()])
 
 
 def decode_inventory(encoded_string, main_inventory: Inventory):
@@ -235,3 +238,12 @@ def read_master_inventory_requirements(filename, master_inventory, full_schedule
 
 def default_shortcode(week, course):
     return "{}WK{}".format(course, week)
+
+def employees_from_schedule(schedule):
+    employees = []
+    for day in schedule.keys():
+        for time in schedule[day]:
+            employee = schedule[day][time]
+            if employee not in employees:
+                employees.append(employee)
+    return employees

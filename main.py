@@ -26,8 +26,8 @@ if __name__ == "__main__":
     # get templates file and make data graph
     filename = os.path.join(root_folder, 'templates', 'lab_rooms_layout.dat')
     if os.path.exists(filename):
-        data = read_links(os.path.join(filename))
-        logging.debug("Created Graph with anchor {}".format(data.home()))
+        graph_structure = read_links(os.path.join(filename))
+        logging.debug("Created Graph with anchor {}".format(graph_structure.home()))
 
     # check output files folder is ther
     filename = os.path.join(root_folder, 'Output Files')
@@ -92,6 +92,7 @@ if __name__ == "__main__":
 
     # Get SPL inventory
     base_inventory = read_inventory(filename)
+    graph_structure.anchor.inventory = base_inventory
 
     # If the user is making a new file:
     if user_choice == 1:
@@ -206,7 +207,58 @@ if __name__ == "__main__":
             event[4]['instructor'],
             event[4]['room'],
             ("Holiday" if event[2] else ""), #note (if holiday)
-            encode_inventory(event[4]['inventory'])
+            encode_inventory(event[4]['inventory'], full_description=True, master_inventory=base_inventory, sep='\n')
         ]
         write_row("Schedule", data, filename)
+
+    # Generate the move schedule room requs by lab room
+    # Left column is datetime, then each room has its equipment requirements in its own column
+    room_reqs = {}
+    # {datetime: {111: Inventory(), 112: Inventory...}}
+    rooms = graph_structure.list_nodes()
+
+    # Make a dictionary that holds every lab time with what room needs what equipment
+    for event in full_schedule:
+        lab_start_time = event[0]
+        room = event[4]['room']
+        equipment_needs: Inventory = event[4]['inventory']
+        if lab_start_time in room_reqs:
+            room_reqs[lab_start_time][room] = equipment_needs
+        else:
+            room_reqs[lab_start_time] = {room: equipment_needs}
+    lab_times = [i for i in room_reqs.keys()]
+    lab_times.sort()
+    # write row labels to B3, C3, D3, etc.
+    for i in range(len(rooms)):
+        set_cell(1 + i, 3, rooms[i], filename, 'Moves')
+    for time in lab_times:
+        data = [time]
+        for room in rooms:
+            if room in room_reqs[time]:
+                data.append(encode_inventory(room_reqs[time][room], full_description=True, master_inventory=base_inventory, sep='\n'))
+            else:
+                data.append("")
+        write_row('Moves', data, filename)
+
+    wrap_cells(filename, 'Moves')
+
+
+
+    # # Now generate the move schedule
+    # # sort main schedule by datetime
+    # moves = []
+    # # Moves should have a list structure of this
+    # # [datetime, Inventory() of items, from_room, to_room]
+    # employees = {employee: 0 for employee in employees_from_schedule(lab_tech_schedule)}
+    # # employees will hold everyone's name and how many moves they've done
+    # full_schedule.sort(key=lambda x: x[0])
+    # for event in full_schedule:
+    #     lab_start_time = event[0]
+    #     room = event[4]['room']
+    #     equipment_needs: Inventory = event[4]['inventory']
+    #
+    #     continue
+
+
+
     user_edit(filename,"All done")
