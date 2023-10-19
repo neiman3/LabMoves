@@ -1,5 +1,7 @@
 # Lab Moves Tool
+
 EE TSG lab moves tool created by Alex Neiman [alhneiman@gmail.com](mailto:alhneiman@gmail.com)/[neiman@calpoly.edu](mailto:neiman@calpoly.edu)
+
 ## About
 This tool will automate creation of lab move schedules. It will generate a spreadsheet file with the full schedule, dates, and equipment requriements, broken down by both lab section view and by room view.
 
