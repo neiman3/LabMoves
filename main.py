@@ -15,7 +15,7 @@ SUB_SUBVERSION = None
 
 if __name__ == "__main__":
     # set up logging
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.WARNING)
 
     # main flow
     logging.info("User started equipment move software tool")
@@ -263,4 +263,5 @@ if __name__ == "__main__":
     #
     #     continue
 
-    user_edit(filename, "All done")
+    open_file_in_windows(filename)
+    print("Schedule generation complete")
