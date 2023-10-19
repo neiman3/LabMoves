@@ -13,6 +13,9 @@ VERSION = 1
 SUBVERSION = 3
 SUB_SUBVERSION = None
 
+TEMPLATE_FILENAME = 'filled_template.xlsx'
+OUTPUT_FILENAME = 'output.xlsx'
+
 if __name__ == "__main__":
     # set up logging
     logging.basicConfig(level=logging.WARNING)
@@ -69,7 +72,7 @@ if __name__ == "__main__":
             # filename ok
             logging.debug("User opened new project at {}".format(filename))
             # copy the excel template
-            fromfn = os.path.join(root_folder, 'templates', 'filled_template.xlsx')
+            fromfn = os.path.join(root_folder, 'templates', TEMPLATE_FILENAME)
             shutil.copyfile(fromfn, filename)  ## DEBUG
             logging.debug("Copied {} -> {}".format(fromfn, filename))
             break
@@ -198,7 +201,7 @@ if __name__ == "__main__":
     if os.path.exists(filename):
         # delete existing output files
         os.remove(filename)
-    source = os.path.join(root_folder, 'templates', 'output.xlsx')
+    source = os.path.join(root_folder, 'templates', OUTPUT_FILENAME)
     shutil.copyfile(source, filename)
     # Ready to fill out default schedule tab
     # datetime, week, course, section, instructor, room, note, equipment list
