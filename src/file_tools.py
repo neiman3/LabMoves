@@ -126,6 +126,7 @@ def split_up(text: str, delimiters):
 
 
 def user_edit(filename, message=None):
+    return ## DEBUG ONLY
     # Prompt user to edit
     if message is None:
         print("Please fill out the excel template.")

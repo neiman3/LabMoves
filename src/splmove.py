@@ -30,7 +30,7 @@ def read_labtech_schedule(filename):
             hour = hours[i]
             dayofweek = days[j]
             result[dayofweek][hour] = cell
-
+    logging.debug("Read lab tech schedule from file")
     return result
 
 
@@ -64,6 +64,7 @@ def read_links(filename):
                 raise ValueError("Malformed input file: {}, {}".format(filename, line))
 
             result.add(int(links[0]), int(links[1]), int(links[2]))
+    logging.debug("Read links structure from file")
     return result
 
 
@@ -102,6 +103,7 @@ def read_sections(filename):
             "groups": groups
         }
 
+    logging.debug("Read instructor schedule from file")
     return start_date, end_date, result
 
 
@@ -114,6 +116,7 @@ def read_inventory(filename):
     result = Inventory()
     for item in items:
         result.store(item[2], int(item[1]), str(item[0]))
+    logging.debug("Read master inventory from file")
     return result
 
 
@@ -124,6 +127,7 @@ def read_holidays(filename):
     wb = load_wb(filename)
     ws = wb[TAB_NAME]
     holidays = [r[0].value for r in ws.iter_rows(min_row=4, min_col=12)]
+    logging.debug("Read holiday schedule from file")
     return holidays
 
 
@@ -167,7 +171,7 @@ def read_default_equipment_schedule(filename):
     wb = load_wb(filename)
     ws = wb[TAB_NAME]
     rows = [[i.value for i in r] for r in ws.iter_rows(min_row=4, min_col=4)]
-    result = {}
+    result = {"HOLIDAY":{}}
     for row in rows:
         shortcode = row[0]
         if shortcode is None:
@@ -176,6 +180,7 @@ def read_default_equipment_schedule(filename):
         for i in range(0, 8):
             if row[2 * i + 1] is not None:
                 result[shortcode][row[2 * i + 1]] = row[2 * i + 2]
+    logging.debug("Read default equipment schedule from file")
     return result
 
 
@@ -189,11 +194,15 @@ def encode_inventory(inventory):
 def decode_inventory(encoded_string, main_inventory: Inventory):
     # Takes a string  object and decodes it into an Inventory
     # 2 x RB2, 1 x LCR [format]
-    base = [i.split("x") for i in ("2 x RB2, 1 x LCR".replace(" ", "").split(","))]
+    if encoded_string is None:
+        return Inventory()
+    base = [i.split("x") for i in (encoded_string.replace(" ", "").split(","))]
     result = Inventory()
     for equipment in base:
+        if equipment[1] == "HOLIDAY":
+            continue
         try:
-            result.store(equipment[1], int([equipment[0]]), main_inventory.get_description(equipment[1]))
+            result.store(equipment[1], int(equipment[0]), main_inventory.get_description(equipment[1]))
         except ValueError:
             logging.warning("Unable to parse equipment requirement {} on line {}".format(equipment, encoded_string))
     return result
@@ -207,4 +216,22 @@ def read_master_inventory_requirements(filename, master_inventory, full_schedule
     ws = wb[TAB_NAME]
     rows = [[i.value for i in r] for r in ws.iter_rows(min_row=4)]
     for row in rows:
-        continue
+        inventory = decode_inventory(row[5], master_inventory)
+        for i in range(len(full_schedule)):
+            inventory_keys = inventory.inventory.keys()
+            schedule_datetime = full_schedule[i][0]
+            row_datetime = row[4]
+            schedule_section = full_schedule[i][3]
+            row_section = row[0]
+            if schedule_datetime == row_datetime: # datetime matches
+                if schedule_section == row_section: # section matches:
+                    # Update the inventory
+                    full_schedule[i][4]["inventory"] = inventory
+                    break
+
+    logging.debug("Read full schedule (custom inventory) from file")
+    return full_schedule
+
+
+def default_shortcode(week, course):
+    return "{}WK{}".format(course, week)
