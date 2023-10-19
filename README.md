@@ -41,14 +41,14 @@ The quantities you enter on this sheet are per-group numbers. If you need a set 
 
 Next, close the sheet, return to the terminal, and press enter.
 
-### STEP 3
+### Step 3
 The equipmment schedule will now auto-populate into the Master Schedule tab. You can customize the exact schedule of every lab section in this tab. This is useful if an instructor has an alternate schedule, or if a lab needs to be rescheduled, modified, etc.
 
 This uses a specific notation for specifying the equipment. If a lab needs 24 decade resistor boxes, one LCR meter, and 10 5mH inductors, and your shortcodes for those items were DRB, LCR, and IND5MH, you would enter this on a single line in the equipment column: `24 x DRB, 1 x LCR, 10 x IND5MH` (case sensitive). 
 
 Make your final modifications to the schedule. Save and close.
 
-### STEP 4 (OR) Open existing project
+### Step 4 (OR) Open existing project
 
 The program will now create a new excel file with the schedule output. It is named from your project file. A project named `foobar` will create a excel file in `./Output Files/foobar.xlsx` and an output excel file in `./Output Files/foobar-output.xlsx`. If you select option 2 at startup, you can load in the previously filled `foobar.xlsx` file and re-generate a new schedule. The `foobar-output.xlsx` file is always overwritten.
 
