@@ -19,7 +19,8 @@ if __name__ == "__main__":
 
     # main flow
     logging.info("User started equipment move software tool")
-    logging.info("Version {}.{}{}".format(VERSION, SUBVERSION, ("" if SUB_SUBVERSION is None else ".{}".format(SUB_SUBVERSION))))
+    logging.info(
+        "Version {}.{}{}".format(VERSION, SUBVERSION, ("" if SUB_SUBVERSION is None else ".{}".format(SUB_SUBVERSION))))
     root_folder = get_project_root()
     logging.debug("Project root: {}".format(root_folder))
 
@@ -57,7 +58,7 @@ if __name__ == "__main__":
                         print("Project name contains illegal character(s) ('{}').".format(char))
                         failed = True
                 filename = os.path.join(root_folder, 'Output Files', project_name + '.xlsx')
-                if os.path.exists(filename): ## DEBUG
+                if os.path.exists(filename):  ## DEBUG
                     # does not exist
                     failed = True
                     print("Project already exists. Please delete it or choose a different name.")
@@ -69,14 +70,15 @@ if __name__ == "__main__":
             logging.debug("User opened new project at {}".format(filename))
             # copy the excel template
             fromfn = os.path.join(root_folder, 'templates', 'filled_template.xlsx')
-            shutil.copyfile(fromfn, filename) ## DEBUG
+            shutil.copyfile(fromfn, filename)  ## DEBUG
             logging.debug("Copied {} -> {}".format(fromfn, filename))
             break
     else:
         # User wants to open existing file
-        filename = file_prompt("Project name > ", base_dir=os.path.join(root_folder, 'Output Files'), auto_filetype='xlsx', must_exist=True)
+        filename = file_prompt("Project name > ", base_dir=os.path.join(root_folder, 'Output Files'),
+                               auto_filetype='xlsx', must_exist=True)
 
-    if user_choice==1:
+    if user_choice == 1:
         logging.debug("Waiting for user to edit initial class schedule")
         user_edit(filename, "STEP 1: Fill out tabs 1-3 (Techs, Sections, and Inventory).")
         logging.debug("User edited initial class schedule")
@@ -118,8 +120,10 @@ if __name__ == "__main__":
     for section in sections_list.keys():
         day = sections_list[section]['day']
         start_time = sections_list[section]['time']
-        full_schedule += ([[i for i in j] + [section, {key: sections_list[section][key] for key in sections_list[section].keys()}] for j in
-                           generate_lab_times(day, start_time, quarter_start, quarter_end, holidays)])
+        full_schedule += (
+        [[i for i in j] + [section, {key: sections_list[section][key] for key in sections_list[section].keys()}] for j
+         in
+         generate_lab_times(day, start_time, quarter_start, quarter_end, holidays)])
     # We now have a list of the following structure
     # [ datetime of lab time,
     #   week no.,
@@ -149,7 +153,7 @@ if __name__ == "__main__":
 
             if event[2]:
                 # It's a holiday
-                equipments = {"HOLIDAY":0}
+                equipments = {"HOLIDAY": 0}
             else:
                 # Look up the full shortcode evalutaion
                 if shortcode in default_equipment_LUT:
@@ -180,9 +184,9 @@ if __name__ == "__main__":
 
             write_row(ws_tab_name="Master Schedule", data=data, filename=filename)
 
-        user_edit(filename, "STEP 3: Please modify any custom changes to the equipment list on the Master Schedule tab.")
+        user_edit(filename,
+                  "STEP 3: Please modify any custom changes to the equipment list on the Master Schedule tab.")
         # Now that the user has written out the full equipment list, try to load it again
-
 
     full_schedule = read_master_inventory_requirements(filename, base_inventory, full_schedule)
 
@@ -194,20 +198,20 @@ if __name__ == "__main__":
     if os.path.exists(filename):
         # delete existing output files
         os.remove(filename)
-    source = os.path.join(root_folder, 'templates','output.xlsx')
+    source = os.path.join(root_folder, 'templates', 'output.xlsx')
     shutil.copyfile(source, filename)
     # Ready to fill out default schedule tab
     # datetime, week, course, section, instructor, room, note, equipment list
     for event in full_schedule:
         data = [
-            event[0], # datetime
-            event[1], # week no.
-            event[3].split('-')[0], # course
-            event[3].split('-')[1], # section
+            event[0],  # datetime
+            event[1],  # week no.
+            event[3].split('-')[0],  # course
+            event[3].split('-')[1],  # section
             event[4]['instructor'],
             event[4]['room'],
-            ("Holiday" if event[2] else ""), #note (if holiday)
-            encode_inventory(event[4]['inventory'], full_description=True, master_inventory=base_inventory, sep='\n')
+            ("Holiday" if event[2] else ""),  # note (if holiday)
+            encode_inventory(event[4]['inventory'], full_description=True, master_inventory=base_inventory, sep=', ')
         ]
         write_row("Schedule", data, filename)
 
@@ -235,14 +239,14 @@ if __name__ == "__main__":
         data = [time]
         for room in rooms:
             if room in room_reqs[time]:
-                data.append(encode_inventory(room_reqs[time][room], full_description=True, master_inventory=base_inventory, sep='\n'))
+                data.append(
+                    encode_inventory(room_reqs[time][room], full_description=True, master_inventory=base_inventory,
+                                     sep='\n'))
             else:
                 data.append("")
         write_row('Moves', data, filename)
 
     wrap_cells(filename, 'Moves')
-
-
 
     # # Now generate the move schedule
     # # sort main schedule by datetime
@@ -259,6 +263,4 @@ if __name__ == "__main__":
     #
     #     continue
 
-
-
-    user_edit(filename,"All done")
+    user_edit(filename, "All done")
