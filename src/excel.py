@@ -52,7 +52,6 @@ def dataframe(form_fields, form_type):
 
 
 def write_row(ws_tab_name, data, filename):
-    return ##DEBUG ONLY
     # save the workbook
     wb = load_wb(filename)
     ws = wb[ws_tab_name]

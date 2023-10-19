@@ -56,13 +56,25 @@ def get_config(project_root, configfilename='config.json'):
     return result
 
 
-def file_prompt(text=" > ", must_exist=True, kind='file', max_retries=5, default=None):
+def file_prompt(text=" > ", must_exist=True, kind='file', max_retries=5, default=None, base_dir=None,
+                auto_filetype=None):
     while True:
         i = 0
         if i > max_retries:
             print("Too many tries while entering file.")
             raise FileNotFoundError
         file = input(text)
+        if base_dir is not None:
+            file = os.path.join(base_dir, file)
+        if auto_filetype is not None:
+            # Automatically add the filetype if it is not present
+            filetype = os.path.splitext(file)[1][1:]
+            if not filetype.lower() == auto_filetype.lower():
+                if filetype == '':
+                    if auto_filetype[0] == '.':
+                        # remove period
+                        auto_filetype = auto_filetype[1:]
+                    file += '.{}'.format(auto_filetype)
         if file == "":
             if default is not None:
                 file = default
@@ -126,7 +138,6 @@ def split_up(text: str, delimiters):
 
 
 def user_edit(filename, message=None):
-    return ## DEBUG ONLY
     # Prompt user to edit
     if message is None:
         print("Please fill out the excel template.")
@@ -134,3 +145,11 @@ def user_edit(filename, message=None):
         print(message)
     open_file_in_windows(filename)
     input("Press enter when you have saved and closed. [enter] ")
+
+
+def add_dash_tag(filename, tag):
+    # adds tag
+    # example: /usr/bib/test.txt -> /usr/bib/test-tag.txt
+    if '.' not in filename:
+        return "{}-{}".format(filename, tag)
+    return "-{}.".format(tag).join(filename.split('.'))
