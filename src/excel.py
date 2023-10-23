@@ -1,7 +1,7 @@
 import logging
 import os.path
 
-from openpyxl import Workbook, load_workbook
+from openpyxl import Workbook, load_workbook, styles
 from openpyxl.worksheet.table import Table, TableStyleInfo
 import datetime
 
@@ -58,6 +58,17 @@ def write_row(ws_tab_name, data, filename):
     save_wb(filename, wb)
 
 
+def set_cell(column, row, value, filename, sheetname):
+    wb = load_wb(filename)
+    ws = wb[sheetname]
+    if column > 25:
+        raise ValueError("Exceeds standard AZ column reference")
+    column_letter = chr(ord('A') + column)
+    ref = '{}{}'.format(column_letter, row)
+    ws[ref] = value
+    save_wb(filename, wb)
+
+
 def new_wb():
     wb = Workbook()
     return wb
@@ -73,6 +84,7 @@ def read_default_equipment(filename):
     # reads the Equipment tab to get default equipments for each lab week
     return None
 
+
 def list_classes(sections_list):
     result = []
     for section in sections_list.keys():
@@ -80,3 +92,12 @@ def list_classes(sections_list):
         if value not in result:
             result.append(value)
     return result
+
+
+def wrap_cells(filename, sheetname):
+    wb = load_wb(filename)
+    ws = wb[sheetname]
+    for row in ws.iter_rows():
+        for cell in row:
+            cell.alignment = styles.Alignment(wrap_text=True)
+    save_wb(filename, wb)

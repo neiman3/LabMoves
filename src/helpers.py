@@ -51,3 +51,19 @@ def generate_lab_times(day_of_week, start_time, quarter_start_date, quarter_end_
             break
 
     return result
+
+
+def menu(menu_options_param):
+    print("Equipment Move Automation Tool")
+    print("")
+    for i in range(len(menu_options_param)):
+        print("  [{:^3}] {}".format(i+1, menu_options_param[i]))
+    print("  [ * ] Enter any other character to exit")
+    print("")
+    user_input = input('      > ')
+    if not user_input.isnumeric():
+        exit()
+    user_input = int(user_input)
+    if user_input < 1 or user_input > len(menu_options_param):
+        exit()
+    return user_input

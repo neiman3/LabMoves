@@ -31,6 +31,7 @@ class Inventory:
     def __init__(self):
         self.inventory = {}
         self.descriptions = {}
+        self.locked = {}
 
     def store(self, item, qty, description=None):
         if self.check(item) is not None:
@@ -68,6 +69,30 @@ class Inventory:
             return self.descriptions[item]
         else:
             return "{} (no description found)".format(item)
+
+    def items(self):
+        return [i for i in self.inventory.keys()]
+
+    def lock(self, item, qty):
+        if self.check(item, qty) is not None:
+            self.remove(item, qty)
+            if item not in self.locked:
+                self.locked[item] = 0
+            self.locked[item] += qty
+        else:
+            raise ValueError("Sufficient {} does not exist in {} to lock".format(item, self))
+
+    def unlock(self, item, qty):
+        if item in self.locked:
+            if self.locked[item] >= qty:
+                # sufficient qty to remove
+                self.locked[item] -= qty
+                self.store(item, qty)
+            else:
+                raise ValueError("Insufficient qty of {} in {} to unlock".format(item, self))
+        else:
+            raise ValueError("{} not found in {}- unable to unlock".format(item, self))
+
 
 
 class Link:
