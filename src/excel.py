@@ -1,6 +1,5 @@
 import logging
 import os.path
-import pandas as pd
 
 from openpyxl import Workbook, load_workbook
 from openpyxl.worksheet.table import Table, TableStyleInfo
